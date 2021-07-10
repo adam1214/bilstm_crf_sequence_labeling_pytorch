@@ -15,6 +15,8 @@ from torch.nn import init
 import numpy as np
 from tensorboardX import SummaryWriter
 
+os.environ['CUDA_VISIBLE_DEVICES']='0'
+
 parser = argparse.ArgumentParser(description='PyTorch BiLSTM+CRF Sequence Labeling')
 parser.add_argument('--model-name', type=str, default='model', metavar='S',
                     help='model name')
@@ -22,7 +24,7 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training')
 parser.add_argument('--test-batch-size', type=int, default=20, metavar='N',
                     help='test batch size')
-parser.add_argument('--epochs', type=int, default=50, metavar='N',
+parser.add_argument('--epochs', type=int, default=1, metavar='N',
                     help='number of epochs to train')
 parser.add_argument('--embedding-size', type=int, default=512, metavar='N',
                     help='embedding size')
@@ -237,7 +239,7 @@ class BiLSTMCRF(nn.Module):
     """
     embed = self.embedding(seq) # (seq_len, batch_size, embedding_size)
     embed = self.dropout(embed)
-    embed = nn.utils.rnn.pack_padded_sequence(embed, mask.sum(0).long())
+    embed = nn.utils.rnn.pack_padded_sequence(embed, mask.sum(0).long().cpu())
     lstm_output, _ = self.bilstm(embed) # (seq_len, batch_size, hidden_size)
     lstm_output, _ = nn.utils.rnn.pad_packed_sequence(lstm_output)
     lstm_output = lstm_output * mask.unsqueeze(-1)
@@ -283,12 +285,17 @@ class SequenceLabelingDataset(Dataset):
     return self._lines_count
 
 def main(args):
+  pass
+if __name__ == "__main__":
+  #main(parser.parse_args())
+  args = parser.parse_args()
+  '''
   global START_TAG
   global END_TAG
   global PAD
   global token2idx
   global tag2idx
-
+  '''
   tb_writer = SummaryWriter(args.model_name)
 
   print("Args: {}".format(args))
@@ -455,6 +462,4 @@ def main(args):
           patience += 1
           if patience == args.patience:
             early_stop = True
-
-if __name__ == "__main__":
-  main(parser.parse_args())
+  print('DONE!')
